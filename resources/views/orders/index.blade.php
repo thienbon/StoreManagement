@@ -10,9 +10,11 @@
             <div class="alert alert-success" role="alert">{{ session('success') }}</div>
         @endif
 
+        @if (auth()->user()->isAdmin())
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
             <a class="btn btn-success btn-sm" href="{{ route('orders.create') }}"><i class="fa fa-plus"></i> Create New Order</a>
         </div>
+        @endif
 
         <table class="table table-bordered table-striped mt-4">
             <thead>
@@ -32,15 +34,17 @@
                     <td>
                         <form action="{{ route('orders.destroy', $order->id) }}" method="POST">
                             <a class="btn btn-info btn-sm" href="{{ route('orders.show', $order->id) }}"><i class="fa-solid fa-list"></i> Show</a>
-                            @if ($order->status !== 'done' && $order->status !== 'checkout')
+                            @if ($order->status !== 'done' && $order->status !== 'checkout' && auth()->user()->isAdmin())
                                 <a class="btn btn-primary btn-sm" href="{{ route('orders.edit', $order->id) }}"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
                             @endif
-                            @if ($order->status !== 'checkout')
+                            @if ($order->status !== 'checkout'&& auth()->user()->isAdmin())
                             <a class="btn btn-warning btn-sm" href="{{ route('orders.checkout', $order->id) }}"><i class="fa fa-shopping-cart"></i> Checkout</a>
                             @endif
                             @csrf
+                            @if (auth()->user()->isAdmin())
                             @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i> Delete</button>
+                            @endif
                         </form>
                     </td>
                 </tr>

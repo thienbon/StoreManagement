@@ -1,43 +1,23 @@
 @extends('orders.layout')
-        
+
 @section('content')
-  
+
 <div class="card mt-5">
-  <h2 class="card-header">Create New Order for Table {{ $table->id }}</h2>
+  <h2 class="card-header">Order More Items for Order #{{ $order->id }}</h2>
   <div class="card-body">
-  
+
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <a class="btn btn-primary btn-sm" href="{{ route('tables.orders', $table->id) }}"><i class="fa fa-arrow-left"></i> Back</a>
+        <a class="btn btn-primary btn-sm" href="{{ route('tables.orders', $order->table_id) }}"><i class="fa fa-arrow-left"></i> Back</a>
     </div>
-  
-    <form action="{{ route('orders.store') }}" method="POST">
+
+    <form action="{{ route('orders.addItems', $order->id) }}" method="POST" id="orderMoreForm">
         @csrf
-        
-        <!-- Hidden input to indicate the redirect target -->
-        <input type="hidden" name="redirect_to" value="tables.orders">
-
-        <div class="mb-3">
-            <label for="inputTableId" class="form-label"><strong>Table ID:</strong></label>
-            <input 
-                type="text" 
-                name="table_id" 
-                class="form-control @error('table_id') is-invalid @enderror" 
-                id="inputTableId" 
-                value="{{ $table->id }}" 
-                readonly>
-            @error('table_id')
-                <div class="form-text text-danger">{{ $message }}</div>
-            @enderror
-        </div>
-
-        <!-- Status is hidden and defaults to "prepare" -->
-        <input type="hidden" name="status" value="prepare">
 
         <div class="mb-3">
             <label for="inputItems" class="form-label"><strong>Items:</strong></label>
             @foreach ($items as $item)
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="items[{{ $item->id }}][id]" value="{{ $item->id }}" id="item{{ $item->id }}">
+                    <input class="form-check-input" type="checkbox" name="items[{{ $item->id }}][id]" value="{{ $item->id }}" id="item{{ $item->id }}" data-price="{{ $item->price }}">
                     <label class="form-check-label" for="item{{ $item->id }}">
                         {{ $item->name }} (${{ number_format($item->price, 2) }})
                     </label>
@@ -57,10 +37,10 @@
             <label for="totalAmount" class="form-label"><strong>Total Amount:</strong></label>
             <input type="text" id="totalAmount" class="form-control" value="0" readonly>
         </div>
-  
+
         <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Order</button>
     </form>
-  
+
   </div>
 </div>
 

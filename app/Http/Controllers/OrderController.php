@@ -62,6 +62,11 @@ class OrderController extends Controller
             ]);
         }
 
+        if ($request->redirect_to == 'tables.orders') {
+            return redirect()->route('tables.orders', ['table' => $request->table_id])
+                ->with('success', 'Order created successfully.');
+        }
+
         return redirect()->route('orders.index')
             ->with('success', 'Order created successfully.');
     }
@@ -138,7 +143,7 @@ class OrderController extends Controller
     public function showTableOrdersCheckout(Table $table)
     {
         // Fetch orders that are not already checked out
-        $orders = $table->orders()->where('status', '!=', 'checkout')->get(); 
+        $orders = $table->orders()->where('status', '!=', 'checkout')->get();
 
         // Calculate the total bill for all orders of the table
         $totalBill = $orders->sum(function ($order) {
@@ -166,6 +171,36 @@ class OrderController extends Controller
         }
 
         return redirect()->route('tables.show', $table->id)
-                         ->with('success', 'All orders for table ' . $table->id . ' have been checked out successfully.');
+            ->with('success', 'All orders for table ' . $table->id . ' have been checked out successfully.');
     }
+
+    public function orderMore(Order $order)
+{
+    $items = Item::all();
+    return view('orders.order_more', compact('order', 'items'));
+}
+
+public function addItems(Request $request, Order $order)
+{
+    $request->validate([
+        'items' => 'required|array',
+        'items.*.id' => 'required|exists:items,id',
+        'items.*.quantity' => 'required|integer|min:1',
+    ]);
+
+    foreach ($request->items as $item) {
+        $orderItem = $order->orderItems()->where('item_id', $item['id'])->first();
+        if ($orderItem) {
+            $orderItem->quantity += $item['quantity'];
+            $orderItem->save();
+        } else {
+            $order->orderItems()->create([
+                'item_id' => $item['id'],
+                'quantity' => $item['quantity'],
+            ]);
+        }
+    }
+
+    return redirect()->route('tables.orders', $order->table_id)->with('success', 'Items added to order successfully.');
+}
 }

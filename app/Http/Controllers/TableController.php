@@ -146,19 +146,26 @@ class TableController extends Controller
         return view('tables.checkout', compact('table', 'orders', 'total'));
     }
 
-    public function processCheckout(Request $request, Table $table)
-    {
-        // Validate the payment method
-        $request->validate([
-            'payment_method' => 'required|string|in:cash,credit_card,paypal',
-        ]);
+    public function processCheckout(Request $request, Table $table): RedirectResponse
+{
+    // Validate the payment method
+    $request->validate([
+        'payment_method' => 'required|string|in:cash,credit_card,paypal',
+    ]);
 
-        // Update the status of all orders for this table to 'checkout'
-        Order::where('table_id', $table->id)->where('status', '!=', 'checkout')->update(['status' => 'checkout']);
+    // Update the status of all orders for this table to 'checkout'
+    Order::where('table_id', $table->id)->where('status', '!=', 'checkout')->update(['status' => 'checkout']);
 
-        // Process the payment based on the selected method
-        // Here you can add the actual payment processing logic
-
-        return redirect()->route('tables.orders', $table->id)->with('success', 'All orders have been checked out successfully.');
+    // Update the table status to 'available'
+    if ($table->status == 'ordered') {
+        $table->status = 'available';
+        $table->save();
     }
+
+    // Process the payment based on the selected method
+    // Here you can add the actual payment processing logic
+
+    return redirect()->route('feedback.create')->with('success', 'All orders have been checked out successfully, and the table status has been updated to available.');
+}
+
 }

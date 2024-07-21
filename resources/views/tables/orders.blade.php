@@ -20,7 +20,7 @@
                 <tr>
                     <th width="80px">No</th>
                     <th>Status</th>
-                    <th width="250px">Action</th>
+                    <th width="350px">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,10 +32,10 @@
                     <td>
                         <form action="{{ route('orders.destroy', $order->id) }}" method="POST">
                             <a class="btn btn-info btn-sm" href="{{ route('orders.show', $order->id) }}"><i class="fa-solid fa-list"></i> Show</a>
-                            <a class="btn btn-primary btn-sm" href="{{ route('orders.edit', $order->id) }}"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+                            <a class="btn btn-secondary btn-sm" {{ $order->status === 'done' ? 'disabled' : '' }}><href="{{ route('orders.orderMore', $order->id) }}"><i class="fa-solid fa-cart-plus"></i> Order More</a>
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i> Delete</button>
+                            <button type="submit" class="btn btn-danger btn-sm" {{ $order->status === 'done' ? 'disabled' : '' }}><i class="fa-solid fa-trash"></i> Delete</button>
                         </form>
                     </td>
                 </tr>

@@ -31,9 +31,9 @@ Route::middleware('auth')->group(function () {
 Route::resource('stores', StoreController::class);
 Route::resource('tables', TableController::class);//->middleware(['auth','admin']);
 Route::resource('items', ItemController::class)->middleware(['auth','admin']);
-Route::get('items/import', [ItemController::class, 'showImportQuantityForm'])->name('items.import');//->middleware(['auth','admin']);
-Route::post('items/import', [ItemController::class, 'importQuantity'])->name('items.import.post');//->middleware(['auth','admin']);
-Route::resource('products', ProductController::class);
+Route::get('items/import', [ItemController::class, 'showImportQuantityForm'])->name('items.import')->middleware(['auth','admin']);
+Route::post('items/import', [ItemController::class, 'importQuantity'])->name('items.import.post')->middleware(['auth','admin']);
+Route::resource('products', ProductController::class)->middleware(['auth','admin']);
 Route::post('items/import-quantity', [ItemController::class, 'importQuantityFromProducts'])->name('items.import.quantity');
 Route::get('stores/{store}/tables', [StoreController::class, 'tables'])->name('stores.tables');
 Route::get('tables/{table}/orders', [TableController::class, 'orders'])->name('tables.orders');
@@ -52,7 +52,8 @@ Route::get('/orders/create', [OrderController::class, 'createGeneral'])->name('o
 // Route for the checkout page for a specific table
 Route::get('/tables/{table}/checkout', [TableController::class, 'checkout'])->name('tables.orders.checkout');
 Route::post('/tables/{table}/checkout', [TableController::class, 'processCheckout'])->name('tables.orders.checkout.process');
-
+Route::get('/orders/{order}/orderMore', [OrderController::class, 'orderMore'])->name('orders.orderMore');
+Route::post('/orders/{order}/addItems', [OrderController::class, 'addItems'])->name('orders.addItems');
 
 
 Route::patch('/tables/{table}/update-status', [TableController::class, 'updateStatus'])->name('tables.updateStatus');

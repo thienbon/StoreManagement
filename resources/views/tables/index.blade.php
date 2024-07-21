@@ -13,7 +13,7 @@
             <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
         @endif
 
-        @if (auth()->user()->user_type == 'admin')
+        @if (auth()->user()->isAdmin())
         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
             <a class="btn btn-success" href="{{ route('tables.create') }}"><i class="fa fa-plus"></i> Add Table</a>
         </div>
@@ -42,7 +42,7 @@
                         <td>
                             <a class="btn btn-info btn-sm" href="{{ route('tables.show', $table->id) }}"><i class="fa fa-list"></i> Show</a>
                             
-                            @if (auth()->user()->user_type == 'admin')
+                            @if (auth()->user()->isAdmin())
                                 <a class="btn btn-primary btn-sm" href="{{ route('tables.edit', $table->id) }}"><i class="fa fa-pen-to-square"></i> Edit</a>
                                 <form action="{{ route('tables.destroy', $table->id) }}" method="POST" class="d-inline">
                                     @csrf
@@ -67,7 +67,7 @@
                                 @endif
                             </form>
 
-                            @if ($table->status == 'ordered' || auth()->user()->user_type == 'admin')
+                            @if ($table->status == 'ordered' || auth()->user()->isAdmin())
                                 <a class="btn btn-secondary btn-sm" href="{{ route('tables.orders', $table->id) }}"><i class="fa fa-list"></i> View Orders</a>
                             @endif
                         </td>
