@@ -2,64 +2,98 @@
 
 @section('content')
 
-<div class="card mt-5">
-    <h2 class="card-header">Items</h2>
+<div class="card mt-5 shadow-sm">
+    <div class="card-header text-center bg-dark text-white">
+        <h2 class="mb-0">Food Items</h2>
+    </div>
     <div class="card-body">
 
         @if (session('success'))
-            <div class="alert alert-success" role="alert"> {{ session('success') }} </div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         @endif
 
         <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
-            <a class="btn btn-success btn-sm" href="{{ route('items.create') }}"> <i class="fa fa-plus"></i> Create New Item</a>
-            <a href="#" class="btn btn-info btn-sm" id="importQuantityBtn"> <i class="fa fa-plus"></i> Import Quantity</a>
+            <a class="btn btn-success btn-sm me-2" href="{{ route('items.create') }}">
+                <i class="fa fa-plus"></i> Create New Item
+            </a>
+            <a href="#" class="btn btn-info btn-sm" id="importQuantityBtn">
+                <i class="fa fa-upload"></i> Import Quantity
+            </a>
         </div>
 
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th width="80px">No</th>
-                    <th>Name</th>
-                    <th>Price</th>
-                    <th>Description</th>
-                    <th>Quantity in Stock</th>
-                    <th width="250px">Action</th>
-                </tr>
-            </thead>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th width="50px">No</th>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th width="200px">Action</th>
+                    </tr>
+                </thead>
 
-            <tbody>
-            @forelse ($items as $item)
-                <tr>
-                    <td>{{ ++$i }}</td>
-                    <td>{{ $item->name }}</td>
-                    <td>{{ $item->price }}</td>
-                    <td>{{ $item->description }}</td>
-                    <td>{{ $item->quantity_in_stock }}</td>
-                    <td>
-                        <form action="{{ route('items.destroy', $item->id) }}" method="POST">
+                <tbody>
+                @forelse ($items as $item)
+                    <tr>
+                        <td>{{ ++$i }}</td>
+                        <td><img src="{{ asset($item->image) }}" class="img-thumbnail" width="100" height="100" alt="{{ $item->name }}"></td>
+                        <td>{{ $item->name }}</td>
+                        <td>{{ $item->price }}</td>
+                        <td>{{ $item->description }}</td>
+                        <td>{{ $item->quantity_in_stock }}</td>
+                        <td>
+                            <div class="btn-group" role="group" aria-label="Basic example">
+                                <a class="btn btn-info btn-sm me-1 show-item" data-id="{{ $item->id }}">
+                                    <i class="fa fa-eye"></i> Show
+                                </a>
+                                <a class="btn btn-primary btn-sm me-1" href="{{ route('items.edit', $item->id) }}">
+                                    <i class="fa fa-edit"></i> Edit
+                                </a>
+                                <form action="{{ route('items.destroy', $item->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this item?')">
+                                        <i class="fa fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center">There are no items.</td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
 
-                            <a class="btn btn-info btn-sm" href="{{ route('items.show', $item->id) }}"><i class="fa-solid fa-list"></i> Show</a>
+        <div class="d-flex justify-content-center">
+            {!! $items->links() !!}
+        </div>
+    </div>
+</div>
 
-                            <a class="btn btn-primary btn-sm" href="{{ route('items.edit', $item->id) }}"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
-
-                            @csrf
-                            @method('DELETE')
-
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-trash"></i> Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6">There are no items.</td>
-                </tr>
-            @endforelse
-            </tbody>
-
-        </table>
-        
-        {!! $items->links() !!}
-
+<!-- Item Details Modal -->
+<div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Item Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="itemDetails">
+                    <!-- Item details will be loaded here -->
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -80,7 +114,6 @@
             .then(data => {
                 if (data.success) {
                     alert(data.message);
-                    // Reload the page or update DOM as needed
                     window.location.reload();
                 } else {
                     alert('Failed to import quantity.');
@@ -89,6 +122,23 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('Failed to import quantity.');
+            });
+        });
+
+        // Show item details in modal
+        document.querySelectorAll('.show-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-id');
+                fetch(`/items/${itemId}`)
+                    .then(response => response.text())
+                    .then(data => {
+                        document.getElementById('itemDetails').innerHTML = data;
+                        new bootstrap.Modal(document.getElementById('itemModal')).show();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to load item details.');
+                    });
             });
         });
     });

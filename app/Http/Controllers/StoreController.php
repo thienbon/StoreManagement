@@ -15,12 +15,22 @@ class StoreController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
+    public function index(Request $request)
     {
-        $stores = Store::latest()->paginate(5);
-          
-        return view('stores.index', compact('stores'))
-                    ->with('i', (request()->input('page', 1) - 1) * 5);
+        // Retrieve the search query from the request
+        $search = $request->query('search');
+
+        // Fetch stores, applying the search filter if provided
+        $stores = Store::when($search, function ($query, $search) {
+            return $query->where('name', 'like', "%{$search}%");
+        })->paginate(10);
+
+        // Pass the stores data and search query to the view
+        return view('stores.index', [
+            'stores' => $stores,
+            'search' => $search,
+            'i' => (request()->input('page', 1) - 1) * 10 // Adjust page number for correct row count
+        ]);
     }
 
     /**
@@ -47,7 +57,7 @@ class StoreController extends Controller
      */
     public function show(Store $store): View
     {
-        return view('stores.show',compact('store'));
+        return view('stores.store-details', compact('store'));
     }
 
     /**

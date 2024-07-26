@@ -37,20 +37,37 @@ class ItemController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(ItemStoreRequest $request)
-    {
-        Item::create($request->validated());
+    public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required',
+        'price' => 'required',
+        'description' => 'required',
+        'quantity_in_stock' => 'required',
+        'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+    ]);
 
-        return redirect()->route('items.index')
-            ->with('success', 'Item created successfully.');
+    $input = $request->all();
+
+    if ($image = $request->file('image')) {
+        $destinationPath = 'images/';
+        $profileImage = date('YmdHis') . "." . $image->getClientOriginalExtension();
+        $image->move($destinationPath, $profileImage);
+        $input['image'] = "$destinationPath$profileImage";
     }
+
+    Item::create($input);
+
+    return redirect()->route('items.index')
+                    ->with('success', 'Item created successfully.');
+}
 
     /**
      * Display the specified resource.
      */
     public function show(Item $item)
     {
-        return view('items.show', compact('item'));
+        return view('items.item-details', compact('item'));
     }
 
     /**
@@ -64,14 +81,32 @@ class ItemController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(ItemUpdateRequest $request, Item $item)
-    {
-        $item->update($request->validated());
+    public function update(Request $request, Item $item)
+{
+    $request->validate([
+        'name' => 'required',
+        'price' => 'required',
+        'description' => 'required',
+        'quantity_in_stock' => 'required',
+        'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+    ]);
 
-        return redirect()->route('items.index')
-            ->with('success', 'Item updated successfully');
+    $input = $request->all();
+
+    if ($image = $request->file('image')) {
+        $destinationPath = 'images/';
+        $profileImage = date('YmdHis') . "." . $image->getClientOriginalExtension();
+        $image->move($destinationPath, $profileImage);
+        $input['image'] = "$destinationPath$profileImage";
+    } else {
+        unset($input['image']);
     }
 
+    $item->update($input);
+
+    return redirect()->route('items.index')
+                    ->with('success', 'Item updated successfully.');
+}
     /**
      * Remove the specified resource from storage.
      */

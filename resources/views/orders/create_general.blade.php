@@ -1,5 +1,5 @@
 @extends('orders.layout')
-        
+
 @section('content')
   
 <div class="card mt-5">
@@ -45,12 +45,15 @@
         <div class="mb-3">
             <label for="inputItems" class="form-label"><strong>Items:</strong></label>
             @foreach ($items as $item)
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="items[{{ $item->id }}][id]" value="{{ $item->id }}" id="item{{ $item->id }}">
-                    <label class="form-check-label" for="item{{ $item->id }}">
-                        {{ $item->name }} (${{ number_format($item->price, 2) }})
-                    </label>
-                    <div class="input-group">
+                <div class="form-check mb-3">
+                    <div class="d-flex align-items-center">
+                        <input class="form-check-input me-2" type="checkbox" name="items[{{ $item->id }}][id]" value="{{ $item->id }}" id="item{{ $item->id }}">
+                        <label class="form-check-label" for="item{{ $item->id }}">
+                            <img src="{{ asset($item->image) }}" alt="{{ $item->name }}" class="img-thumbnail me-2" width="50">
+                            {{ $item->name }} (${{ number_format($item->price, 2) }})
+                        </label>
+                    </div>
+                    <div class="input-group mt-2">
                         <button type="button" class="btn btn-outline-secondary btn-minus" data-id="{{ $item->id }}" data-price="{{ $item->price }}">-</button>
                         <input type="text" name="items[{{ $item->id }}][quantity]" class="form-control quantity" placeholder="Quantity" value="0" readonly>
                         <button type="button" class="btn btn-outline-secondary btn-plus" data-id="{{ $item->id }}" data-price="{{ $item->price }}">+</button>

@@ -1,67 +1,68 @@
 @extends('orders.layout')
-        
+
 @section('content')
-  
+
 <div class="card mt-5">
-  <h2 class="card-header">Create New Order for Table {{ $table->id }}</h2>
-  <div class="card-body">
-  
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <a class="btn btn-primary btn-sm" href="{{ route('tables.orders', $table->id) }}"><i class="fa fa-arrow-left"></i> Back</a>
-    </div>
-  
-    <form action="{{ route('orders.store') }}" method="POST">
-        @csrf
-        
-        <!-- Hidden input to indicate the redirect target -->
-        <input type="hidden" name="redirect_to" value="tables.orders">
+    <h2 class="card-header">Create New Order for Table {{ $table->id }}</h2>
+    <div class="card-body">
 
-        <div class="mb-3">
-            <label for="inputTableId" class="form-label"><strong>Table ID:</strong></label>
-            <input 
-                type="text" 
-                name="table_id" 
-                class="form-control @error('table_id') is-invalid @enderror" 
-                id="inputTableId" 
-                value="{{ $table->id }}" 
-                readonly>
-            @error('table_id')
-                <div class="form-text text-danger">{{ $message }}</div>
-            @enderror
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a class="btn btn-primary btn-sm" href="{{ route('tables.orders', $table->id) }}"><i class="fa fa-arrow-left"></i> Back</a>
         </div>
 
-        <!-- Status is hidden and defaults to "prepare" -->
-        <input type="hidden" name="status" value="prepare">
+        <form action="{{ route('orders.store') }}" method="POST">
+            @csrf
+            
+            <!-- Hidden input to indicate the redirect target -->
+            <input type="hidden" name="redirect_to" value="tables.orders">
 
-        <div class="mb-3">
-            <label for="inputItems" class="form-label"><strong>Items:</strong></label>
-            @foreach ($items as $item)
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="items[{{ $item->id }}][id]" value="{{ $item->id }}" id="item{{ $item->id }}">
-                    <label class="form-check-label" for="item{{ $item->id }}">
-                        {{ $item->name }} (${{ number_format($item->price, 2) }})
-                    </label>
-                    <div class="input-group">
-                        <button type="button" class="btn btn-outline-secondary btn-minus" data-id="{{ $item->id }}" data-price="{{ $item->price }}">-</button>
-                        <input type="text" name="items[{{ $item->id }}][quantity]" class="form-control quantity" placeholder="Quantity" value="0" readonly>
-                        <button type="button" class="btn btn-outline-secondary btn-plus" data-id="{{ $item->id }}" data-price="{{ $item->price }}">+</button>
+            <div class="mb-3">
+                <label for="inputTableId" class="form-label"><strong>Table ID:</strong></label>
+                <input 
+                    type="text" 
+                    name="table_id" 
+                    class="form-control @error('table_id') is-invalid @enderror" 
+                    id="inputTableId" 
+                    value="{{ $table->id }}" 
+                    readonly>
+                @error('table_id')
+                    <div class="form-text text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <!-- Status is hidden and defaults to "prepare" -->
+            <input type="hidden" name="status" value="prepare">
+
+            <div class="mb-3">
+                <label for="inputItems" class="form-label"><strong>Items:</strong></label>
+                @foreach ($items as $item)
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="items[{{ $item->id }}][id]" value="{{ $item->id }}" id="item{{ $item->id }}">
+                        <label class="form-check-label d-flex align-items-center" for="item{{ $item->id }}">
+                            <img src="{{ asset($item->image) }}" class="img-thumbnail me-2" width="100" height="100" alt="{{ $item->name }}">
+                            {{ $item->name }} (${{ number_format($item->price, 2) }})
+                        </label>
+                        <div class="input-group mt-2">
+                            <button type="button" class="btn btn-outline-secondary btn-minus" data-id="{{ $item->id }}" data-price="{{ $item->price }}">-</button>
+                            <input type="text" name="items[{{ $item->id }}][quantity]" class="form-control quantity" placeholder="Quantity" value="0" readonly>
+                            <button type="button" class="btn btn-outline-secondary btn-plus" data-id="{{ $item->id }}" data-price="{{ $item->price }}">+</button>
+                        </div>
                     </div>
-                </div>
-            @endforeach
-            @error('items')
-                <div class="form-text text-danger">{{ $message }}</div>
-            @enderror
-        </div>
+                @endforeach
+                @error('items')
+                    <div class="form-text text-danger">{{ $message }}</div>
+                @enderror
+            </div>
 
-        <div class="mb-3">
-            <label for="totalAmount" class="form-label"><strong>Total Amount:</strong></label>
-            <input type="text" id="totalAmount" class="form-control" value="0" readonly>
-        </div>
-  
-        <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Order</button>
-    </form>
-  
-  </div>
+            <div class="mb-3">
+                <label for="totalAmount" class="form-label"><strong>Total Amount:</strong></label>
+                <input type="text" id="totalAmount" class="form-control" value="0" readonly>
+            </div>
+      
+            <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Order</button>
+        </form>
+
+    </div>
 </div>
 
 <script>
@@ -106,4 +107,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
 @endsection

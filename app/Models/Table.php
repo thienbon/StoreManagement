@@ -10,8 +10,9 @@ class Table extends Model
     use HasFactory;
     protected $fillable = [
         'store_id',
-        'location',
+        'name',
         'capacity',
+        'qr_code_image',
     ];
 
     public function store()

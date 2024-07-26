@@ -20,12 +20,25 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): View
-    {
-        $orders = Order::latest()->paginate(5);
-        return view('orders.index', compact('orders'))
-            ->with('i', (request()->input('page', 1) - 1) * 5);
+    public function index(Request $request): View
+{
+    $query = Order::query()
+        ->with('table'); // Eager load the table relationship
+
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        $query->whereHas('table', function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%");
+        })
+        ->orWhere('status', 'like', "%{$search}%");
     }
+
+    $orders = $query->latest()->paginate(5);
+
+    return view('orders.index', compact('orders'))
+        ->with('i', (request()->input('page', 1) - 1) * 5);
+}
+
 
     /**
      * Show the form for creating a new resource.
@@ -52,6 +65,18 @@ class OrderController extends Controller
      */
     public function store(OrderStoreRequest $request): RedirectResponse
     {
+        // Check if there's already an active order for the table
+        $existingOrder = Order::where('table_id', $request->table_id)
+            ->where('status', '!=', 'checkout')
+            ->first();
+
+        if ($existingOrder) {
+            // Redirect back with an error message if an active order exists
+            return redirect()->route('tables.orders', ['table' => $request->table_id])
+                ->with('error', 'An active order already exists for this table.');
+        }
+
+        // Create the new order
         $order = Order::create($request->validated());
 
         foreach ($request->items as $item) {
@@ -62,6 +87,7 @@ class OrderController extends Controller
             ]);
         }
 
+        // Redirect based on the 'redirect_to' parameter
         if ($request->redirect_to == 'tables.orders') {
             return redirect()->route('tables.orders', ['table' => $request->table_id])
                 ->with('success', 'Order created successfully.');
@@ -71,15 +97,15 @@ class OrderController extends Controller
             ->with('success', 'Order created successfully.');
     }
 
+
     /**
      * Display the specified resource.
      */
     public function show(Order $order): View
     {
         $order->load('orderItems.item');
-        return view('orders.show', compact('order'));
+        return view('orders.order-details', compact('order'));
     }
-
     /**
      * Show the form for editing the specified resource.
      */
@@ -175,32 +201,32 @@ class OrderController extends Controller
     }
 
     public function orderMore(Order $order)
-{
-    $items = Item::all();
-    return view('orders.order_more', compact('order', 'items'));
-}
-
-public function addItems(Request $request, Order $order)
-{
-    $request->validate([
-        'items' => 'required|array',
-        'items.*.id' => 'required|exists:items,id',
-        'items.*.quantity' => 'required|integer|min:1',
-    ]);
-
-    foreach ($request->items as $item) {
-        $orderItem = $order->orderItems()->where('item_id', $item['id'])->first();
-        if ($orderItem) {
-            $orderItem->quantity += $item['quantity'];
-            $orderItem->save();
-        } else {
-            $order->orderItems()->create([
-                'item_id' => $item['id'],
-                'quantity' => $item['quantity'],
-            ]);
-        }
+    {
+        $items = Item::all();
+        return view('orders.order_more', compact('order', 'items'));
     }
 
-    return redirect()->route('tables.orders', $order->table_id)->with('success', 'Items added to order successfully.');
-}
+    public function addItems(Request $request, Order $order)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        foreach ($request->items as $item) {
+            $orderItem = $order->orderItems()->where('item_id', $item['id'])->first();
+            if ($orderItem) {
+                $orderItem->quantity += $item['quantity'];
+                $orderItem->save();
+            } else {
+                $order->orderItems()->create([
+                    'item_id' => $item['id'],
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+        }
+
+        return redirect()->route('tables.orders', $order->table_id)->with('success', 'Items added to order successfully.');
+    }
 }

@@ -30,7 +30,7 @@ Route::middleware('auth')->group(function () {
 
 Route::resource('stores', StoreController::class);
 Route::resource('tables', TableController::class);//->middleware(['auth','admin']);
-Route::resource('items', ItemController::class)->middleware(['auth','admin']);
+Route::resource('items', ItemController::class);//->middleware(['auth','admin']);
 Route::get('items/import', [ItemController::class, 'showImportQuantityForm'])->name('items.import')->middleware(['auth','admin']);
 Route::post('items/import', [ItemController::class, 'importQuantity'])->name('items.import.post')->middleware(['auth','admin']);
 Route::resource('products', ProductController::class)->middleware(['auth','admin']);
