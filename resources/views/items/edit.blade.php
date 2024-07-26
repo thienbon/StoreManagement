@@ -10,7 +10,7 @@
         <a class="btn btn-primary btn-sm" href="{{ route('items.index') }}"><i class="fa fa-arrow-left"></i> Back</a>
     </div>
   
-    <form action="{{ route('items.update', $item->id) }}" method="POST">
+    <form action="{{ route('items.update', $item->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
   
@@ -67,6 +67,23 @@
             @error('quantity_in_stock')
                 <div class="form-text text-danger">{{ $message }}</div>
             @enderror
+        </div>
+
+        <div class="mb-3">
+            <label for="inputImage" class="form-label"><strong>Image:</strong></label>
+            <input 
+                type="file" 
+                name="image" 
+                class="form-control @error('image') is-invalid @enderror" 
+                id="inputImage">
+            @error('image')
+                <div class="form-text text-danger">{{ $message }}</div>
+            @enderror
+            @if ($item->image)
+                <div class="mt-2">
+                    <img src="{{ asset($item->image) }}" alt="{{ $item->name }}" class="img-thumbnail" width="200">
+                </div>
+            @endif
         </div>
   
         <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Update</button>

@@ -1,5 +1,5 @@
 
-@extends('feedback.layout')
+@extends('layouts.store')
 
 @section('content')
 <div class="card mt-5">

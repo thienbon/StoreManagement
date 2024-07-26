@@ -22,8 +22,9 @@ class TableUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'store_id' => 'required|exists:stores,id',
+            'name' => 'required|string',
             'capacity' => 'required|integer',
-            'location' => 'nullable|string',
         ];
     }
 }

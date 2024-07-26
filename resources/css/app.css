@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.input-group {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.btn-outline-secondary {
+    background-color: #333;
+    color: #fff;
+}

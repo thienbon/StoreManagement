@@ -20,10 +20,19 @@ class TableController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tables = Table::with('store')->latest()->paginate(5);
-        return view('tables.index', compact('tables'))->with('i', (request()->input('page', 1) - 1) * 5);
+        $search = $request->query('search');
+
+        // Query to fetch tables based on search criteria
+        $tables = Table::query()
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%");
+            })
+            ->with('store') // Eager load store relation
+            ->paginate(10); // Adjust pagination as needed
+
+        return view('tables.index', compact('tables'));
     }
 
     /**
@@ -46,15 +55,25 @@ class TableController extends Controller
     {
         $request->validate([
             'store_id' => 'required|exists:stores,id',
-            'location' => 'required',
+            'name' => 'required|string',
             'capacity' => 'required|integer',
+            'qr_code_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Validate QR code image
         ]);
 
-        Table::create([
+        $table = new Table([
             'store_id' => $request->store_id,
-            'location' => $request->location,
+            'name' => $request->name,
             'capacity' => $request->capacity,
         ]);
+
+        if ($request->hasFile('qr_code_image')) {
+            $image = $request->file('qr_code_image');
+            $imageName = time() . '.' . $image->extension();
+            $image->move(public_path('qr_codes'), $imageName);
+            $table->qr_code_image = $imageName;
+        }
+
+        $table->save();
 
         return redirect()->route('tables.index')
             ->with('success', 'Table created successfully.');
@@ -65,24 +84,48 @@ class TableController extends Controller
      */
     public function show(Table $table)
     {
-        return view('tables.show', compact('table'));
+        return view('tables.table-details', compact('table'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Table $table)
+    public function edit(Store $store, Table $table)
     {
         return view('tables.edit', compact('table'));
     }
     /**
      * Update the specified resource in storage.
      */
-    public function update(TableUpdateRequest $request, Store $store, Table $table): RedirectResponse
+    public function update(Request $request, Table $table): RedirectResponse
     {
-        $table->update($request->validated());
+        $request->validate([
+            'store_id' => 'required|exists:stores,id',
+            'name' => 'required|string',
+            'capacity' => 'required|integer',
+            'qr_code_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Validate QR code image
+        ]);
 
-        return redirect()->route('tables.index', $store)
+        $table->update([
+            'store_id' => $request->store_id,
+            'name' => $request->name,
+            'capacity' => $request->capacity,
+        ]);
+
+        if ($request->hasFile('qr_code_image')) {
+            // Delete old QR code image if exists
+            if ($table->qr_code_image && file_exists(public_path('qr_codes/' . $table->qr_code_image))) {
+                unlink(public_path('qr_codes/' . $table->qr_code_image));
+            }
+
+            $image = $request->file('qr_code_image');
+            $imageName = time() . '.' . $image->extension();
+            $image->move(public_path('qr_codes'), $imageName);
+            $table->qr_code_image = $imageName;
+            $table->save();
+        }
+
+        return redirect()->route('tables.index')
             ->with('success', 'Table updated successfully');
     }
 
@@ -147,25 +190,24 @@ class TableController extends Controller
     }
 
     public function processCheckout(Request $request, Table $table): RedirectResponse
-{
-    // Validate the payment method
-    $request->validate([
-        'payment_method' => 'required|string|in:cash,credit_card,paypal',
-    ]);
+    {
+        // Validate the payment method
+        $request->validate([
+            'payment_method' => 'required|string|in:cash,credit_card,paypal',
+        ]);
 
-    // Update the status of all orders for this table to 'checkout'
-    Order::where('table_id', $table->id)->where('status', '!=', 'checkout')->update(['status' => 'checkout']);
+        // Update the status of all orders for this table to 'checkout'
+        Order::where('table_id', $table->id)->where('status', '!=', 'checkout')->update(['status' => 'checkout']);
 
-    // Update the table status to 'available'
-    if ($table->status == 'ordered') {
-        $table->status = 'available';
-        $table->save();
+        // Update the table status to 'available'
+        if ($table->status == 'ordered') {
+            $table->status = 'available';
+            $table->save();
+        }
+
+        // Process the payment based on the selected method
+        // Here you can add the actual payment processing logic
+
+        return redirect()->route('feedback.create')->with('success', 'All orders have been checked out successfully, and the table status has been updated to available.');
     }
-
-    // Process the payment based on the selected method
-    // Here you can add the actual payment processing logic
-
-    return redirect()->route('feedback.create')->with('success', 'All orders have been checked out successfully, and the table status has been updated to available.');
-}
-
 }

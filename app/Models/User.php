@@ -49,4 +49,8 @@ class User extends Authenticatable
     {
         return $this->usertype === 'admin';
     }
+    public function isUser()
+    {
+        return $this->usertype === 'user'; // Assuming 'role' is the column storing the user's role
+    }
 }

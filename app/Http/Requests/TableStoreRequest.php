@@ -24,7 +24,7 @@ class TableStoreRequest extends FormRequest
         return [
             'store_id' => 'required|exists:stores,id',
             'capacity' => 'required|integer',
-            'location' => 'nullable|string',
+            'name' => 'required|string',
         ];
     }
 }
